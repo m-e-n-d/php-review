@@ -1,34 +1,12 @@
 <?php
-define( 'FILENAME','./message.txt');
+define( 'FILENAME','./message.csv');
 date_default_timezone_set('Asia/Tokyo');
-$now_date = null;
-$data = null;
-$file_handle = null;
-$split_data = null;
-$message = array();
-$message_array = array();
-if( !empty($_POST['send'])) {
-  if( $file_handle = fopen( FILENAME,"a")) {
-    $now_date = date("Y-m-d H:i:s");
-    $data = "'".$_POST['name']."','".$_POST['message']."','".$now_date."'\n";
-    fwrite( $file_handle, $data);
-    fclose( $file_handle);
-  }
-  if( $file_handle = fopen( FILENAME,'r') ) {
-    while( $data = fgets($file_handle) ){
-      $split_data = preg_split( '/\'/', $data);
-        $message = array(
-            'name' => $split_data[1],
-            'message' => $split_data[3],
-            'post_date' => $split_data[5]
-        );
-        array_unshift( $message_array, $message);
-        echo $data . "<br>";
-    }
-    fclose( $file_handle);
+
+if(isset($_POST['name']) && isset($_POST['title']) &&isset($_POST['message']) ){
+  saveAsCSV($_POST['name'], $_POST['title'], $_POST['message']);
+  header('location:index.php');
 }
-var_dump($_POST);
-}
+
  ?>
 <!DOCTYPE html>
 <html>
@@ -40,7 +18,7 @@ var_dump($_POST);
   <h1>井戸端掲示板</h1>
 </header>
 <body>
- <form method="post">
+ <form method="post" action=" ">
    <div>
     <label for="name">名前</label><br>
     <input type="text" id="name" name="name">
@@ -50,26 +28,33 @@ var_dump($_POST);
     <input type="text" id="title" name="title">
    </div>
    <div>
-    <label for="message">以下にコメントをお書きください</label><br>
+    <label for="message">以下にメッセージをお書きください</label><br>
     <textarea rows="3" cols="50" maxlength="150" id=message name="message"></textarea><br>
    </div>
-   <input type="submit" name="send" value="投稿する">
+   <input type="submit" name="send"value="投稿する">
  </form>
   <button type="button" onclick="location.href='index.php'">キャンセル</button>
   <hr>
- <section>
- <?php if( !empty($message_array) ): ?>
- <?php foreach( $message_array as $value ): ?>
- <article>
-     <div class="info">
-         <h2><?php echo $value['name']; ?></h2>
-         <time><?php echo date('Y年m月d日 H:i', strtotime($value['post_date'])); ?></time>
-     </div>
-     <p><?php echo $value['message']; ?></p>
- </article>
- <?php endforeach; ?>
- <?php endif; ?>
- </section>
+ 
 </body>
 </html>
 
+<?php
+/////////////////////////////////
+//CSVにセーブする関数
+//$ message =>
+//    $name：投稿者名
+//    $title：投稿タイトル
+//    $comment：投稿コメント
+function saveAsCSV($name, $title, $message){
+  // CSVに変換するarrayを作成
+  $now_date = date("Y-m-d H:i:s");
+  $data = $name.",".$title.",".$message.",".$now_date."\n";
+
+  // CSVとして保存
+  if($csv_file = fopen(FILENAME, "a")){
+    fwrite($csv_file, $data);
+    fclose($csv_file);
+  }
+}
+?>
